@@ -375,10 +375,17 @@ class Viewer(pyglet.window.Window):
 # ----------------------------------------------------------------------------
 
 def _load_scene_from_images(img_paths):
-    from generator import SceneGenerator
+    """Utility used by the demo CLI to build a scene from images."""
+    from generator import SceneGenerator, InMemoryCache
+    from utils import find_min_resolution, uniformise_images, world_to_scene
 
-    sg = SceneGenerator(list(map(str, img_paths)))
-    return sg.build()
+    min_w, min_h = find_min_resolution(img_paths)
+    imgs, (min_w, min_h) = uniformise_images(img_paths, (min_w, min_h))
+    world = SceneGenerator(cache=InMemoryCache(max_size=1)).build_world(imgs)
+    scene = world_to_scene(world)
+    scene.positions[:, 0] /= min_w
+    scene.positions[:, 1] /= min_h
+    return scene
 
 
 def _create_test_scene(num_points: int = 10_000):
