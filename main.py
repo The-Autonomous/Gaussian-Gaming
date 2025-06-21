@@ -9,16 +9,18 @@
 #   pip install pillow numpy pyglet pynput
 
 from pathlib import Path
-import sys, tempfile
-from typing import List, Tuple
-
-import numpy as np
-from PIL import Image
+import sys
 
 from generator import SceneGenerator, InMemoryCache
 from graphics import Viewer
 import pyglet
 
+from utils import (
+    scan_images,
+    find_min_resolution,
+    uniformise_images,
+    world_to_scene,
+)
 
 def scan_images(folder: Path) -> List[Path]:
     """Scan a folder for image files (png, jpg, jpeg) and return their paths."""
@@ -97,7 +99,6 @@ def world_to_scene(world, scale_xy: tuple[float, float] = (1.0, 1.0)):
     )
     return scn
 
-
 def main() -> None:
     folder = Path(sys.argv[1] if len(sys.argv) > 1 else "images").expanduser()
     if not folder.is_dir():
@@ -109,7 +110,7 @@ def main() -> None:
 
     # 1. Harmonise resolutions
     min_w, min_h = find_min_resolution(imgs)
-    uniform_imgs = uniformise_images(imgs, (min_w, min_h))
+    uniform_imgs, (min_w, min_h) = uniformise_images(imgs, (min_w, min_h))
 
     # 2. Build world
     gen = SceneGenerator(cache=InMemoryCache(max_size=1))
